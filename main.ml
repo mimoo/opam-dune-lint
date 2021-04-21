@@ -87,19 +87,20 @@ let generate_report ~project ~index ~opam pkg =
   let build_problems =
     OpamPackage.Map.to_seq build
     |> List.of_seq
-    |> List.concat_map (fun (dep, hint) ->
+    |> List.map (fun (dep, hint) ->
         let dep_name = OpamPackage.name dep in
         match OpamPackage.Name.Map.find_opt dep_name opam_deps with
         | Some `Build -> []
         | Some `Test -> [`Remove_with_test dep_name, hint]
         | None -> [`Add_build_dep dep, hint]
       )
+    |> List.concat
   in
   let test_problems =
     test
     |> OpamPackage.Map.to_seq
     |> List.of_seq
-    |> List.concat_map (fun (dep, hint) ->
+    |> List.map (fun (dep, hint) ->
         if OpamPackage.Map.mem dep build then []
         else (
           let dep_name = OpamPackage.name dep in
@@ -109,6 +110,7 @@ let generate_report ~project ~index ~opam pkg =
           | None -> [`Add_test_dep dep, hint]
         )
       )
+    |> List.concat
   in
   build_problems @ test_problems
 

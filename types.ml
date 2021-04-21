@@ -18,7 +18,7 @@ module Change_with_hint = struct
   let pp_name = Fmt.using OpamPackage.Name.to_string Fmt.(quote string)
 
   let version_to_string =
-    if Sys.getenv_opt "OPAM_DUNE_LINT_TESTS" = Some "y" then Fun.const "1.0"
+    if Sys.getenv_opt "OPAM_DUNE_LINT_TESTS" = Some "y" then fun _ -> "1.0"
     else OpamPackage.version_to_string
 
   let includes_version (c, _) =

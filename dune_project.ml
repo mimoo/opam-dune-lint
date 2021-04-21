@@ -29,11 +29,15 @@ let map_if name f = function
   | x -> x
 
 (* [package_name xs] returns the value of the (name foo) item in [xs]. *)
-let package_name =
-  List.find_map (function
-      | Dune_lang.List [Atom (A "name"); Atom (A name)] -> Some name
-      | _ -> None
-    ) 
+let package_name xs =
+  match
+    List.find_opt (function
+        | Dune_lang.List [Atom (A "name"); Atom (A _)] -> true
+        | _ -> false)
+      xs
+  with
+  | Some (Dune_lang.List [Atom (A "name"); Atom (A name)]) -> Some name
+  | _ -> None
 
 let rec simplify_and = function
   | Dune_lang.List [Atom (A "and"); x] -> x
@@ -135,7 +139,11 @@ module Deps = struct
 
   let merge_dep ~path acc = function
     | Sexplib.Sexp.List (Atom lib :: _) ->
-      let dirs = Libraries.find_opt lib acc |> Option.value ~default:Dir_set.empty in
+      let dirs =
+        match Libraries.find_opt lib acc with
+        | Some dirs -> dirs
+        | None -> Dir_set.empty
+      in
       Libraries.add lib (Dir_set.add path dirs) acc
     | x -> Fmt.failwith "Bad output from 'dune external-lib-deps': %a" Sexplib.Sexp.pp_hum x
 
